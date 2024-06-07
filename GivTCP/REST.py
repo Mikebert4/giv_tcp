@@ -3,6 +3,7 @@
 from os.path import exists
 from flask import Flask, request, send_from_directory
 from flask_cors import CORS
+import asyncio
 import read as rd       #grab passthrough functions from main read file
 import write as wr      #grab passthrough functions from main write file
 import evc as evc
@@ -35,7 +36,9 @@ def get_config_page():
 #Read from Invertor put in cache and publish
 @giv_api.route('/runAll', methods=['GET'])
 def getAll():
-    return rd.runAll(True)
+    # We need a safe way to do this for REST... just sending cache for now
+    #logger.critical("runAll called via REST")
+    return rd.getCache()
 
 @giv_api.route('/reboot', methods=['GET'])
 def reboot():
@@ -48,17 +51,25 @@ def restart():
 #Publish last cached Invertor Data
 @giv_api.route('/readData', methods=['GET'])
 def rdData():
+    #logger.critical("readData called via REST")
     return rd.pubFromPickle()
 
 #Publish last cached Invertor Data
 @giv_api.route('/getCache', methods=['GET'])
 def gtCache():
-    return rd.getCache()
+    #logger.critical("getCache called via REST")
+    return asyncio.run(rd.runAllRest())
 
 # Read from Invertor put in cache
+<<<<<<< HEAD
 @giv_api.route('/getData', methods=['GET'])
 def gtData():
     return GivQueue.q.enqueue(rd.getData,True)
+=======
+#@giv_api.route('/getData', methods=['GET'])
+#def gtData():
+#    return GivQueue.q.enqueue(rd.getData,True)
+>>>>>>> origin/dev3
 
 #Proxy Write Functions
 @giv_api.route('/enableChargeTarget', methods=['POST'])
@@ -88,6 +99,14 @@ def setChrgTarget():
     payload = request.get_json(silent=True, force=True)
     return wr.setChargeTarget(payload)
 
+<<<<<<< HEAD
+=======
+@giv_api.route('/setExportTarget', methods=['POST'])
+def setExpTarget():
+    payload = request.get_json(silent=True, force=True)
+    return wr.setExportTarget(payload)
+
+>>>>>>> origin/dev3
 @giv_api.route('/setDischargeTarget', methods=['POST'])
 def setDischrgTarget():
     payload = request.get_json(silent=True, force=True)
@@ -102,6 +121,16 @@ def setBattReserve():
 def setChrgeRate():
     payload = request.get_json(silent=True, force=True)
     return wr.setChargeRate(payload)
+
+@giv_api.route('/setCarChargeBoost', methods=['POST'])
+def setCarBoost():
+    payload = request.get_json(silent=True, force=True)
+    return wr.setCarChargeBoost(payload)
+
+@giv_api.route('/setExportLimit', methods=['POST'])
+def setExpLim():
+    payload = request.get_json(silent=True, force=True)
+    return wr.setExportLimit(payload)
 
 @giv_api.route('/setDischargeRate', methods=['POST'])
 def setDischrgeRate():
@@ -127,6 +156,12 @@ def setChrgSlot2():
     payload['slot']=2
     return wr.setChargeSlot(payload)
 
+@giv_api.route('/setChargeSlot3', methods=['POST'])
+def setChrgSlot3():
+    payload = request.get_json(silent=True, force=True)
+    payload['slot']=3
+    return wr.setChargeSlot(payload)
+
 @giv_api.route('/setDischargeSlot1', methods=['POST'])
 def setDischrgSlot1():
     payload = request.get_json(silent=True, force=True)
@@ -139,6 +174,30 @@ def setDischrgSlot2():
     payload['slot']=2
     return wr.setDischargeSlot(payload)
 
+<<<<<<< HEAD
+=======
+@giv_api.route('/setDischargeSlot3', methods=['POST'])
+def setDischrgSlot3():
+    payload = request.get_json(silent=True, force=True)
+    payload['slot']=3
+    return wr.setDischargeSlot(payload)
+
+@giv_api.route('/setExportSlot1', methods=['POST'])
+def setExpSlot1():
+    payload = request.get_json(silent=True, force=True)
+    payload['slot']=1
+    return wr.setExportSlot(payload)
+@giv_api.route('/setExportSlot2', methods=['POST'])
+def setExpSlot2():
+    payload = request.get_json(silent=True, force=True)
+    payload['slot']=2
+    return wr.setExportSlot(payload)
+@giv_api.route('/setExportSlot3', methods=['POST'])
+def setExpSlot3():
+    payload = request.get_json(silent=True, force=True)
+    payload['slot']=3
+    return wr.setExportSlot(payload)
+>>>>>>> origin/dev3
 
 @giv_api.route('/tempPauseDischarge', methods=['POST'])
 def tmpPauseDischrg():

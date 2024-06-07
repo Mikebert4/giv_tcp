@@ -1,8 +1,13 @@
 import logging
 from abc import ABC
 
+<<<<<<< HEAD
 from givenergy_modbus_async.codec import PayloadDecoder
 from givenergy_modbus_async.pdu.base import (
+=======
+from ..codec import PayloadDecoder
+from .base import (
+>>>>>>> origin/dev3
     BasePDU,
     ClientIncomingMessage,
     ClientOutgoingMessage,

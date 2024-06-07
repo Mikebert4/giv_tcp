@@ -318,8 +318,13 @@ for inv in range(1,int(os.getenv('NUMINVERTORS'))+1):
         setts["first_run"]=True
         setts["first_run_evc"]=True
         setts["inverter_num"]=inv
+<<<<<<< HEAD
         if len(evclist)>0:
             setts["evc_ip_address"]=evclist[1]
+=======
+        if len(evcList)>0:
+            setts["evc_ip_address"]=evcList[1]
+>>>>>>> origin/dev3
             setts["evc_enable"]=True
         if len(inverterStats)>0:
             if inverterStats[inv]['Model']=="All in One":

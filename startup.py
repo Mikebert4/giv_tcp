@@ -2,14 +2,24 @@ from datetime import datetime, timedelta, timezone
 from genericpath import exists
 import os, pickle, subprocess, logging,shutil, shlex, schedule
 from time import sleep
+<<<<<<< HEAD
+=======
+import json
+>>>>>>> origin/dev3
 #import rq_dashboard
 import zoneinfo
 import sys
 import requests
+import asyncio
 from GivTCP.findInvertor import findInvertor
 from GivTCP.findEVC import findEVC
 import givenergy_modbus.model.inverter
 from givenergy_modbus.client import GivEnergyClient
+<<<<<<< HEAD
+=======
+from givenergy_modbus_async.client.client import Client
+from givenergy_modbus_async.model.inverter import Model, Generation
+>>>>>>> origin/dev3
 from pymodbus.client.sync import ModbusTcpClient
 
 selfRun={}
@@ -33,7 +43,11 @@ elif str(os.getenv("LOG_LEVEL")).lower()=="warning":
     logger.setLevel(logging.WARNING)
 else:
     logger.setLevel(logging.ERROR)
+<<<<<<< HEAD
 logging.getLogger("givenergy_modbus").setLevel(logging.CRITICAL)
+=======
+logging.getLogger("givenergy_modbus_async").setLevel(logging.CRITICAL)
+>>>>>>> origin/dev3
 
 # Check if config directory exists and creates it if not
 
@@ -49,19 +63,56 @@ def validateEVC(HOST):
         return True
     except:
         e=sys.exc_info()
+<<<<<<< HEAD
         logger.info(e)
+=======
+        #logger.info(e)
+>>>>>>> origin/dev3
         return False
 
 def getInvDeets(HOST):
     try:
+        Stats={}
         client=GivEnergyClient(host=HOST)
         stats=client.get_inverter_stats()
         logger.debug("Deets retrieved from found Inverter are: "+str(stats))
         SN=stats[2]
-        gen=givenergy_modbus.model.inverter.Generation.from_fw_version(stats[1])._value_
+        gen=givenergy_modbus.model.inverter.Generation._missing_(stats[1])
         model=givenergy_modbus.model.inverter.Model.from_device_type_code(stats[0])
         fw=stats[1]
-        return SN,gen,model,fw
+        logger.critical(f'Inverter {str(SN)} which is a {str(gen.value)} - {str(model)} has been found at: {str(HOST)}')
+        Stats['Serial_Number']=SN
+        Stats['Firmware']=fw
+        Stats['Model']=model
+        Stats['Generation']=gen
+        Stats['IP Address']=HOST
+        return Stats
+    except:
+        #logger.error("Gathering inverter details for " + str(HOST) + " failed.")
+        return None
+
+async def getInvDeets2(HOST):
+    try:
+        Stats={}
+        client=Client(HOST,8899,3)
+        await client.connect()
+        await client.detect_plant(additional=False)
+        await client.close()
+        SN= client.plant.inverter.serial_number
+        #logger.debug("Deets retrieved from found Inverter are: "+str(stats))
+        #SN=stats[2]
+        gen=client.plant.inverter.generation
+        model=client.plant.inverter.model
+        fw=client.plant.inverter.arm_firmware_version
+        numbats=client.plant.number_batteries
+        Stats['Serial_Number']=SN
+        Stats['Firmware']=fw
+        Stats['Model']=model
+        Stats['Generation']=gen
+        Stats['Number_of_Batteries']=numbats
+        Stats['IP Address']=HOST
+        logger.critical(f'Inverter {str(SN)} which is a {str(gen.name.capitalize())} - {str(model.name.capitalize())} with {str(numbats)} batteries has been found at: {str(HOST)}')
+        return Stats
     except:
         logger.error("Gathering inverter details for " + str(HOST) + " failed.")
         return None
@@ -73,6 +124,7 @@ def isitoldfw(invstats):
     Gen 2 909+ New. 99x Beta   Schedule Pause only for Gen2+
     Gen 3 303+ New 39x Beta    New has 10 slots
     AIO 6xx New 69x Beta       ALL has 10 slots'''
+<<<<<<< HEAD
     if invstats['Model']=='AC' and int(invstats['Firmware'])>500:
         return True
     elif invstats['Model']=='All in One' and int(invstats['Firmware'])<600:
@@ -82,6 +134,17 @@ def isitoldfw(invstats):
     elif invstats['Generation']=='Gen 2' and int(invstats['Firmware'])<909:
         return True
     elif invstats['Generation']=='Gen 3' and int(invstats['Firmware'])<303:
+=======
+    if invstats['Model']==Model.AC and int(invstats['Firmware'])>500:
+        return True
+    elif invstats['Model']==Model.ALL_IN_ONE and int(invstats['Firmware'])<600:
+        return True
+    elif invstats['Generation']==Generation.GEN1 and int(invstats['Firmware'])>400:
+        return True
+    elif invstats['Generation']==Generation.GEN2 and int(invstats['Firmware'])<909:
+        return True
+    elif invstats['Generation']==Generation.GEN3 and int(invstats['Firmware'])<303:
+>>>>>>> origin/dev3
         return True
     return False
 
@@ -90,7 +153,10 @@ def findinv(networks):
     if len(networks)>0:
     # For each interface scan for inverters
         logger.debug("Networks available for scanning are: "+str(networks))
+<<<<<<< HEAD
         Stats={}
+=======
+>>>>>>> origin/dev3
         inverterStats={}
         invList={}
         list={}
@@ -115,7 +181,11 @@ def findinv(networks):
                             if validateEVC(evclist[evc]):
                                 logger.critical("GivEVC found at: "+str(evclist[evc]))
                             else:
+<<<<<<< HEAD
                                 logger.info(evclist[evc]+" is not an EVC")
+=======
+                                logger.debug(evclist[evc]+" is not an EVC")
+>>>>>>> origin/dev3
                                 poplist.append(evc)
                         for pop in poplist:
                             evclist.pop(pop)    #remove the unknown modbus device(s)
@@ -138,6 +208,7 @@ def findinv(networks):
                             count=0
                             while not deets:
                                 if count<2:
+<<<<<<< HEAD
                                     deets=getInvDeets(invList[inv])
                                     if deets:
                                         logger.critical(f'Inverter {deets[0]} which is a {str(deets[1])} - {str(deets[2])} has been found at: {str(invList[inv])}')
@@ -156,6 +227,22 @@ def findinv(networks):
                                             logger.critical("This inverter is NOT an AIO, ensure that the AIO setting is NOT checked")
                                     else:
                                         logger.error("Unable to interrogate inverter to get base details")
+=======
+                                    deets=asyncio.run(getInvDeets2(invList[inv]))
+                                    #deets=getInvDeets2(invList[inv])
+                                    if deets:
+                                        inverterStats[inv]=deets
+                                        if isitoldfw(inverterStats[inv]):
+                                            logger.debug("This inverter IS on 'old firmware', ensure that the old firmware setting IS checked in the configuration")
+                                        else:
+                                            logger.debug("This inverter is on 'new firmware', ensure that the old firmware setting is NOT checked in the configuration")
+                                        if deets['Model']=="All in One":
+                                            logger.debug("This inverter IS an AIO, ensure that the AIO setting IS checked in the configuration and NUMBATTERIES is set to 0")
+                                        else:
+                                            logger.debug("This inverter is NOT an AIO, ensure that the AIO setting is NOT checked")
+                                    #else:
+                                    #    logger.error("Unable to interrogate inverter to get base details")
+>>>>>>> origin/dev3
                                     count=count+1
                                 else:
                                     break
@@ -170,7 +257,11 @@ def findinv(networks):
             logger.error("Error scanning for Inverters- "+str(e))
     else:
         logger.error("Unable to get host details from Supervisor\Container")
+<<<<<<< HEAD
     return inverterStats
+=======
+    return inverterStats, invList, evclist
+>>>>>>> origin/dev3
 
 
 SuperTimezone={}        # 02-Aug-23  default it to None so that it is defined for saving in settngs.py for non-HA usage (otherwise exception)
@@ -239,6 +330,7 @@ else:
 
 sleep(2)        # Sleep to allow port scanning socket to close
 
+<<<<<<< HEAD
 inverterStats={}
 i=0
 while len(inverterStats)==0:
@@ -248,6 +340,19 @@ while len(inverterStats)==0:
         break
     else:
         logger.info("Searching for Inverters again")
+=======
+finv={}
+i=0
+while len(finv)==0:
+    logger.info("Searching for Inverters")
+    finv=findinv(networks)
+    i=i+1
+    if i==3: 
+        break    
+inverterStats=finv[0]
+invList=finv[1]
+evcList=finv[2]
+>>>>>>> origin/dev3
 
 logger.debug("GivTCP isAddon: "+str(isAddon))
 
@@ -263,23 +368,30 @@ logger.critical("Running Redis")
 #rqdash=subprocess.Popen(["/usr/local/bin/rq-dashboard","-u redis://127.0.0.1:6379"])
 #logger.critical("Running RQ Dashboard on port 9181")
 
-#vueConfig=subprocess.Popen(["npm", "run", "dev","-- --host"],cwd="/app/config_frontend")
-#logger.critical("Running Config Frontend")
+vueConfig=subprocess.Popen(["npm", "run", "dev","-- --host --silent"],cwd="/app/config_frontend")
+logger.critical("Running Config Frontend")
+
+subprocess.Popen(["nginx","-g","daemon off;"])
 
 subprocess.Popen(["nginx","-g","daemon off;error_log /dev/stdout debug;"])
 
 ##########################################################################################################
-#
-#
+#                                                                                                        #
+#                                                                                                        #
 #   Up to now everything is __init__ type prep, below is conifg setting (move to webpage and not ENV...) #
-# 
-# 
+#                                                                                                        #
+#                                                                                                        #
 ##########################################################################################################
 
 
 for inv in range(1,int(os.getenv('NUMINVERTORS'))+1):
     logger.critical ("Setting up invertor: "+str(inv)+" of "+str(os.getenv('NUMINVERTORS')))
     PATH= "/app/GivTCP_"+str(inv)
+<<<<<<< HEAD
+=======
+    SFILE="/config/GivTCP/settings"+str(inv)+".json"
+    firstrun="/config/GivTCP/.firstrun_"+str(inv)
+>>>>>>> origin/dev3
 
     # Create folder per instance
     if not exists(PATH):
@@ -292,17 +404,89 @@ for inv in range(1,int(os.getenv('NUMINVERTORS'))+1):
     # Remove old settings file
     if exists(PATH+"/settings.py"):
         os.remove(PATH+"/settings.py")
+    if exists(firstrun):
+        logger.debug("Removing firstrun")
+        os.remove(firstrun)
     FILENAME=""
+<<<<<<< HEAD
     # create settings file
+=======
+
+########################################################
+#  Set up the settings.json file ready for future use  #
+########################################################
+
+    if not exists(SFILE):
+        logger.debug("Copying in a template settings.json to: "+str(SFILE))
+        shutil.copyfile("/app/settings.json",SFILE)
+    else:
+        # If theres already a settings file, make sure its got any new elements
+        with open(SFILE, 'r') as f1:
+            setts=json.load(f1)
+        with open("/app/settings.json", 'r') as f2:
+            templatesetts=json.load(f2)
+        for setting in templatesetts:
+            if not setting in setts:
+                setts[setting]=templatesetts[setting]
+        with open(SFILE, 'w') as f:
+            f.write(json.dumps(setts,indent=4))
+
+
+# Update json object with found data
+    logger.debug ("Recreating settings.json for invertor "+str(inv))
+    with open(SFILE, 'r') as f:
+        setts=json.load(f)
+        if SuperTimezone: setts["TZ"]=str(SuperTimezone)
+        if hasMQTT:
+            logger.debug("Using found MQTT data to autosetup settings.json")
+            setts["MQTT_Output"]=True
+            # Only autosetup if there's not already a setting, to stop overriding manual setup
+            if setts["MQTT_Address"]=="": setts["MQTT_Address"]=mqtt_host
+            if setts["MQTT_Username"]=="": setts["MQTT_Username"]=mqtt_username
+            if setts["MQTT_Password"]=="": setts["MQTT_Password"]=mqtt_password
+            setts["MQTT_Port"]=mqtt_port
+        if setts["MQTT_Address"]=="": setts['MQTT_Output']=False
+        if len(invList)>0:
+            logger.debug("Using found Inverter data to autosetup settings.json")
+            if setts["invertorIP"]=="": setts["invertorIP"]=invList[inv]
+            if setts["invertorIP"]=="": setts["serial_number"]=inverterStats[inv]['Serial_Number']
+        if setts["invertorIP"]=="": setts['self_run']=False
+        setts["Debug_File_Location"]=setts["cache_location"]+"/log_inv_"+str(inv)+".log"
+        setts["givtcp_instance"]=inv
+        setts["default_path"]=PATH
+        setts["first_run"]=True
+        setts["first_run_evc"]=True
+        setts["inverter_num"]=inv
+        if len(evcList)>0:
+            setts["evc_ip_address"]=evcList[1]
+            setts["evc_enable"]=True
+        #if len(inverterStats)>0:
+        #    if inverterStats[inv]['Model']=="All in One":
+        #        setts['isAIO']=True
+        #    else:
+        #        setts['isAIO']=False
+        #    if isitoldfw(inverterStats[inv]):
+        #        setts['isAC']=True
+        #    else:
+        #        setts['isAC']=False
+
+    with open(SFILE, 'w') as f:
+        f.write(json.dumps(setts,indent=4))
+
+
+########################################################
+#  Set up the settings.py file ready for use now       #
+########################################################
+
+>>>>>>> origin/dev3
     logger.debug("Recreating settings.py for invertor "+str(inv))
     with open(PATH+"/settings.py", 'w') as outp:
         outp.write("class GiV_Settings:\n")
         outp.write("    invertorIP=\""+str(os.getenv("INVERTOR_IP_"+str(inv),""))+"\"\n")
-        outp.write("    numBatteries="+str(os.getenv("NUMBATTERIES_"+str(inv),"")+"\n"))
-        outp.write("    isAIO="+str(os.getenv("INVERTOR_AIO_"+str(inv),"")+"\n"))
-        outp.write("    isAC="+str(os.getenv("INVERTOR_AC_"+str(inv),"")+"\n"))
-        outp.write("    Print_Raw_Registers="+str(os.getenv("PRINT_RAW",""))+"\n")
-        outp.write("    MQTT_Output="+str(os.getenv("MQTT_OUTPUT","")+"\n"))
+        #outp.write("    numBatteries="+str(os.getenv("NUMBATTERIES_"+str(inv),"")+"\n"))    #Don't Need
+        #outp.write("    isAIO="+str(os.getenv("INVERTOR_AIO_"+str(inv),"")+"\n"))           #Don't Need
+        #outp.write("    isAC="+str(os.getenv("INVERTOR_AC_"+str(inv),"")+"\n"))             #Don't Need
+
         if hasMQTT:
             outp.write("    MQTT_Address=\""+str(mqtt_host)+"\"\n")
             outp.write("    MQTT_Username=\""+str(mqtt_username)+"\"\n")
@@ -316,12 +500,18 @@ for inv in range(1,int(os.getenv('NUMINVERTORS'))+1):
         outp.write("    MQTT_Retain="+str(os.getenv("MQTT_RETAIN","")+"\n"))
         if isAddon:
             outp.write("    HA_Auto_D=True\n")
+            outp.write("    Print_Raw_Registers=True\n")
+            outp.write("    MQTT_Output=True\n")
         else:
             outp.write("    HA_Auto_D="+str(os.getenv("HA_AUTO_D",""))+"\n")
+            outp.write("    Print_Raw_Registers="+str(os.getenv("PRINT_RAW",""))+"\n")
+            outp.write("    MQTT_Output="+str(os.getenv("MQTT_OUTPUT","")+"\n"))
         if inv==1:
             outp.write("    MQTT_Topic=\""+str(os.getenv("MQTT_TOPIC","")+"\"\n"))
+            outp.write("    ha_device_prefix=\""+str(os.getenv("HADEVICEPREFIX","")+"\"\n"))
         else:
             outp.write("    MQTT_Topic=\""+str(os.getenv("MQTT_TOPIC_"+str(inv),"")+"\"\n"))
+            outp.write("    ha_device_prefix=\""+str(os.getenv("HADEVICEPREFIX_"+str(inv),"")+"\"\n"))
 
         outp.write("    Log_Level=\""+str(os.getenv("LOG_LEVEL","")+"\"\n"))
         #setup debug filename for each inv
@@ -330,9 +520,14 @@ for inv in range(1,int(os.getenv('NUMINVERTORS'))+1):
         outp.write("    influxToken=\""+str(os.getenv("INFLUX_TOKEN","")+"\"\n"))
         outp.write("    influxBucket=\""+str(os.getenv("INFLUX_BUCKET","")+"\"\n"))
         outp.write("    influxOrg=\""+str(os.getenv("INFLUX_ORG","")+"\"\n"))
+<<<<<<< HEAD
         outp.write("    first_run= True\n")
+=======
+        #outp.write("    first_run= True\n")
+>>>>>>> origin/dev3
         outp.write("    first_run_evc= True\n")
         outp.write("    self_run_timer="+str(os.getenv("SELF_RUN_LOOP_TIMER","5"))+"\n")
+        outp.write("    self_run_timer_full="+str(os.getenv("SELF_RUN_LOOP_TIMER_FULL","5"))+"\n")
         outp.write("    queue_retries="+str(os.getenv("QUEUE_RETRIES","2"))+"\n")    
         outp.write("    givtcp_instance="+str(inv)+"\n")
         outp.write("    default_path=\""+str(os.getenv("PATH","")+"\"\n"))
@@ -342,10 +537,6 @@ for inv in range(1,int(os.getenv('NUMINVERTORS'))+1):
         outp.write("    export_rate="+str(os.getenv("EXPORTRATE","")+"\n"))
         outp.write("    day_rate_start=\""+str(os.getenv("DAYRATESTART","")+"\"\n"))
         outp.write("    night_rate_start=\""+str(os.getenv("NIGHTRATESTART","")+"\"\n"))
-        if inv==1:
-            outp.write("    ha_device_prefix=\""+str(os.getenv("HADEVICEPREFIX","")+"\"\n"))
-        else:
-            outp.write("    ha_device_prefix=\""+str(os.getenv("HADEVICEPREFIX_"+str(inv),"")+"\"\n"))
         outp.write("    data_smoother=\""+str(os.getenv("DATASMOOTHER","")+"\"\n"))
         if str(os.getenv("CACHELOCATION"))=="":
             outp.write("    cache_location=\"/config/GivTCP\"\n")
@@ -354,7 +545,10 @@ for inv in range(1,int(os.getenv('NUMINVERTORS'))+1):
             outp.write("    cache_location=\""+str(os.getenv("CACHELOCATION")+"\"\n"))
             outp.write("    Debug_File_Location=\""+os.getenv("CACHELOCATION")+"/log_inv_"+str(inv)+".log\"\n")
         outp.write("    inverter_num=\""+str(inv)+"\"\n")
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/dev3
         outp.write("    GE_API=\""+str(os.getenv("GEAPI")+"\"\n"))
         outp.write("    PALM_WINTER=\""+str(os.getenv("PALM_WINTER")+"\"\n"))
         outp.write("    PALM_SHOULDER=\""+str(os.getenv("PALM_SHOULDER")+"\"\n"))
@@ -377,6 +571,9 @@ for inv in range(1,int(os.getenv('NUMINVERTORS'))+1):
     ######
     #  Always delete lockfiles and FCRunning etc... but only delete pkl if too old?
 
+    if exists(os.getenv("CACHELOCATION")+"/rawData_"+str(inv)+".pkl"):
+        logger.debug("Removing old invertor raw data cache")
+        os.remove(str(os.getenv("CACHELOCATION"))+"/rawData_"+str(inv)+".pkl")
     if exists(os.getenv("CACHELOCATION")+"/regCache_"+str(inv)+".pkl"):
         logger.debug("Removing old invertor data cache")
         os.remove(str(os.getenv("CACHELOCATION"))+"/regCache_"+str(inv)+".pkl")
@@ -410,9 +607,12 @@ for inv in range(1,int(os.getenv('NUMINVERTORS'))+1):
 # Still need to run the below process per inverter
 #
 ##########################################################
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> origin/dev3
 
     os.chdir(PATH)
 
@@ -424,8 +624,13 @@ for inv in range(1,int(os.getenv('NUMINVERTORS'))+1):
         mqttBroker=subprocess.Popen(["/usr/sbin/mosquitto", "-c",PATH+"/mqtt.conf"])
 
     if os.getenv('SELF_RUN')=="True" or isAddon:
+<<<<<<< HEAD
         logger.critical ("Running Invertor ("+str(os.getenv("INVERTOR_IP_"+str(inv),""))+") read loop every "+str(os.getenv('SELF_RUN_LOOP_TIMER'))+"s")
         selfRun[inv]=subprocess.Popen(["/usr/local/bin/python3",PATH+"/read.py", "self_run2"])
+=======
+        logger.critical ("Running Invertor ("+str(os.getenv("INVERTOR_IP_"+str(inv),""))+") read loop every "+str(os.getenv('SELF_RUN_LOOP_TIMER'))+"/"+str(os.getenv('SELF_RUN_LOOP_TIMER_FULL'))+"s")
+        selfRun[inv]=subprocess.Popen(["/usr/local/bin/python3",PATH+"/read.py", "start"])
+>>>>>>> origin/dev3
 
     if os.getenv('EVC_ENABLE')=="True" and inv==1:  #only run it once
         if not os.getenv('EVC_IP_ADDRESS')=="":
@@ -488,7 +693,11 @@ while True:
             logger.error("Self Run loop process died. restarting...")
             os.chdir(PATH)
             logger.critical ("Restarting Invertor read loop every "+str(os.getenv('SELF_RUN_LOOP_TIMER'))+"s")
+<<<<<<< HEAD
             selfRun[inv]=subprocess.Popen(["/usr/local/bin/python3",PATH+"/read.py", "self_run2"])
+=======
+            selfRun[inv]=subprocess.Popen(["/usr/local/bin/python3",PATH+"/read.py", "start"])
+>>>>>>> origin/dev3
         if os.getenv('MQTT_OUTPUT')==True and not mqttClient[inv].poll()==None:
             logger.error("MQTT Client process died. Restarting...")
             os.chdir(PATH)
@@ -518,11 +727,14 @@ while True:
         os.chdir(PATH)
         logger.critical ("Restarting EVC read loop every "+str(os.getenv('EVC_SELF_RUN_TIMER'))+"s")
         selfRun[inv]=subprocess.Popen(["/usr/local/bin/python3",PATH+"/evc.py", "self_run2"])
+<<<<<<< HEAD
     if os.getenv('EVC_ENABLE')==True and not evcSelfRun.poll()==None:
         logger.error("EVC Self Run loop process died. restarting...")
         os.chdir(PATH)
         logger.critical ("Restarting EVC read loop every "+str(os.getenv('EVC_SELF_RUN_TIMER'))+"s")
         evcSelfRun=subprocess.Popen(["/usr/local/bin/python3",PATH+"/evc.py", "self_run2"])
+=======
+>>>>>>> origin/dev3
     if os.getenv('EVC_ENABLE')==True and not evcChargeModeLoop.poll()==None:
         logger.error("EVC Self Run loop process died. restarting...")
         os.chdir(PATH)

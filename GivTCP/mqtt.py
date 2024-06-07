@@ -5,7 +5,11 @@ from GivLUT import GivLUT
 from settings import GiV_Settings
 import sys
 #from HA_Discovery import HAMQTT
+<<<<<<< HEAD
 from givenergy_modbus_async.model.inverter import Model
+=======
+from givenergy_modbus_async.model.register import Model
+>>>>>>> origin/dev3
 
 logger = GivLUT.logger
 

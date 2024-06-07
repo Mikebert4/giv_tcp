@@ -1,6 +1,7 @@
 import logging
 from abc import ABC
 
+<<<<<<< HEAD
 from givenergy_modbus_async.codec import (
     PayloadDecoder,
     PayloadEncoder,
@@ -9,6 +10,16 @@ from givenergy_modbus_async.exceptions import (
     InvalidPduState,
 )
 from givenergy_modbus_async.pdu.transparent import (
+=======
+from ..codec import (
+    PayloadDecoder,
+    PayloadEncoder,
+)
+from ..exceptions import (
+    InvalidPduState,
+)
+from .transparent import (
+>>>>>>> origin/dev3
     TransparentMessage,
     TransparentRequest,
     TransparentResponse,
@@ -16,6 +27,7 @@ from givenergy_modbus_async.pdu.transparent import (
 
 _logger = logging.getLogger(__name__)
 
+<<<<<<< HEAD
 # Canonical list of registers that are safe to write to.
 WRITE_SAFE_REGISTERS = {
     20,  # ENABLE_CHARGE_TARGET
@@ -106,6 +118,8 @@ WRITE_SAFE_REGISTERS = {
 }
 
 
+=======
+>>>>>>> origin/dev3
 class WriteHoldingRegister(TransparentMessage, ABC):
     """Request & Response PDUs for function #6/Write Holding Register."""
 
@@ -183,8 +197,11 @@ class WriteHoldingRegisterRequest(WriteHoldingRegister, TransparentRequest):
     def ensure_valid_state(self):
         """Sanity check our internal state."""
         super().ensure_valid_state()
+<<<<<<< HEAD
         if self.register not in WRITE_SAFE_REGISTERS:
             raise InvalidPduState(f"HR({self.register}) is not safe to write to", self)
+=======
+>>>>>>> origin/dev3
 
     def _update_check_code(self):
         crc_builder = PayloadEncoder()
@@ -208,8 +225,11 @@ class WriteHoldingRegisterResponse(WriteHoldingRegister, TransparentResponse):
     def ensure_valid_state(self):
         """Sanity check our internal state."""
         super().ensure_valid_state()
+<<<<<<< HEAD
         if self.register not in WRITE_SAFE_REGISTERS and not self.error:
             _logger.warning(f"{self} is not safe for writing")
+=======
+>>>>>>> origin/dev3
 
 
 __all__ = ()

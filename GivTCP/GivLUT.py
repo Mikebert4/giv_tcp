@@ -2,6 +2,7 @@
 from givenergy_modbus_async.client.client import Client
 from givenergy_modbus.client import GivEnergyClient
 from settings import GiV_Settings
+<<<<<<< HEAD
 from givenergy_modbus_async.model.plant import Plant
 import settings
 import importlib
@@ -12,6 +13,17 @@ import time
 class GivClient:
     """Definition of GivEnergy client """
 
+=======
+from givenergy_modbus.model import plant
+
+from threading import Lock
+
+class GivClientAsync:
+    client=Client(GiV_Settings.invertorIP,8899)
+
+class GivClient:
+    """Definition of GivEnergy client """
+>>>>>>> origin/dev3
     def getData(fullrefresh: bool):
         
         client= GivEnergyClient(host=GiV_Settings.invertorIP)
@@ -19,6 +31,7 @@ class GivClient:
             numbat=0
         else:
             numbat=GiV_Settings.numBatteries
+<<<<<<< HEAD
         plant=Plant(number_batteries=numbat)
         #If there is a serial_number use it
         if hasattr(GiV_Settings,'serial_number'):
@@ -87,6 +100,17 @@ class GivClient:
         await client.refresh_plant(fullrefresh, number_batteries=client.plant.number_batteries, retries=3, timeout=3.0)
         await client.close()
         return client.plant
+=======
+        myplant=plant.Plant(number_batteries=numbat)
+        #If there is a serial_number use it
+        if hasattr(GiV_Settings,'serial_number'):
+            client.refresh_plant(myplant,GiV_Settings.isAIO,GiV_Settings.isAC,fullrefresh,serial_number=GiV_Settings.serial_number)
+        else:
+            client.refresh_plant(myplant,GiV_Settings.isAIO,GiV_Settings.isAC,fullrefresh)
+        return myplant
+
+
+>>>>>>> origin/dev3
 
 class GivQueue:
     from redis import Redis
@@ -106,12 +130,13 @@ class GEType:
         self.onlyIncrease=oI
 
 class InvType:
-    def __init__(self,ph,md,pw,mr,gn):
+    def __init__(self,ph,md,pw,mr,gn,bc):
         self.phase=ph
         self.model=md
         self.invmaxrate=pw
         self.batmaxrate=mr
         self.generation=gn
+        self.batterycapacity=bc
 
 class GivLUT:
     #Logging config
@@ -137,6 +162,8 @@ class GivLUT:
     else:
         logger.setLevel(logging.ERROR)
 
+    cachelock=Lock()
+
     # File paths for use
     lockfile=".lockfile"
     regcache=GiV_Settings.cache_location+"/regCache_"+str(GiV_Settings.givtcp_instance)+".pkl"
@@ -145,6 +172,7 @@ class GivLUT:
     forcefullrefresh=GiV_Settings.cache_location+"/.forceFullRefresh_"+str(GiV_Settings.givtcp_instance)
     batterypkl=GiV_Settings.cache_location+"/battery_"+str(GiV_Settings.givtcp_instance)+".pkl"
     reservepkl=GiV_Settings.cache_location+"/reserve_"+str(GiV_Settings.givtcp_instance)+".pkl"
+    rawpkl=GiV_Settings.cache_location+"/rawdata_"+str(GiV_Settings.givtcp_instance)+".pkl"
     ppkwhtouch=".ppkwhtouch"
     schedule=".schedule"
     oldDataCount=GiV_Settings.cache_location+"/oldDataCount_"+str(GiV_Settings.givtcp_instance)+".pkl"
@@ -153,6 +181,7 @@ class GivLUT:
     nightRateRequest=GiV_Settings.cache_location+"/.nightRateRequest_"+str(GiV_Settings.givtcp_instance)
     dayRateRequest=GiV_Settings.cache_location+"/.dayRateRequest_"+str(GiV_Settings.givtcp_instance)
     invippkl=GiV_Settings.cache_location+"/invIPList.pkl"
+    firstrun=GiV_Settings.cache_location+"/.firstrun_"+str(GiV_Settings.givtcp_instance)
 
 
     if hasattr(GiV_Settings,'timezone'):                        # If in Addon, use the HA Supervisor timezone
@@ -166,18 +195,23 @@ class GivLUT:
     maxInvPower=11000
     maxPower=30000
     maxBatPower=7500
+    maxExport=10000
     maxTemp=100
-    maxCellVoltage=4
+    maxCellVoltage=350
     maxTotalEnergy=100000000
     maxTodayEnergy=100000
     maxCost=100
     maxRate=2
-    Last_Updated_Time=GEType("sensor","timestamp","","","",False,False,False)
+    #Last_Updated_Time=GEType("sensor","timestamp","","","",False,False,False)
 
     entity_type={
         "Last_Updated_Time":GEType("sensor","timestamp","","","",False,False,False),
         "Time_Since_Last_Update":GEType("sensor","","",0,10000,True,False,False),
         "status":GEType("sensor","string","","","",False,False,False),
+<<<<<<< HEAD
+=======
+        "Timeout_Error":GEType("sensor","string","","","",False,False,False),
+>>>>>>> origin/dev3
         "GivTCP_Version":GEType("sensor","string","","","",False,False,False),
         "Export_Energy_Total_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,True,True),
         "Battery_Throughput_Total_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,True,True),
@@ -204,9 +238,9 @@ class GivLUT:
         "PV_Power":GEType("sensor","power","",0,maxPower,True,False,False),
         "PV_Voltage_String_1":GEType("sensor","voltage","",0,550,True,False,False),
         "PV_Voltage_String_2":GEType("sensor","voltage","",0,550,True,False,False),
-        "PV_Current_String_1":GEType("sensor","current","",0,20,True,False,False),
-        "PV_Current_String_2":GEType("sensor","current","",0,20,True,False,False),
-        "Grid_Power":GEType("sensor","power","",-maxPower,maxPower,True,False,False),
+        "PV_Current_String_1":GEType("sensor","current","",0,100,True,False,False),
+        "PV_Current_String_2":GEType("sensor","current","",0,100,True,False,False),
+        "Grid_Power":GEType("sensor","power","",-maxPower,maxExport,True,False,False),
         "Grid_Current":GEType("sensor","current","",-120,120,False,False,False),
         "Grid_Voltage":GEType("sensor","voltage","",150,300,False,True,False),
         "Import_Power":GEType("sensor","power","",0,maxPower,True,False,False),
@@ -221,7 +255,7 @@ class GivLUT:
         "Battery_Current":GEType("sensor","current","",-500,500,True,False,False),
         "Charge_Power":GEType("sensor","power","",0,maxBatPower,True,False,False),
         "Discharge_Power":GEType("sensor","power","",0,maxBatPower,True,False,False),
-        "SOC":GEType("sensor","battery","",0,100,False,False,False),
+        "SOC":GEType("sensor","battery","",0,100,False,True,False),
         "SOC_kWh":GEType("sensor","energy","",0,50,True,False,False),
         "Solar_to_House":GEType("sensor","power","",0,maxInvPower,True,False,False),
         "Solar_to_Battery":GEType("sensor","power","",0,maxInvPower,True,False,False),
@@ -240,6 +274,7 @@ class GivLUT:
         "Invertor_Firmware":GEType("sensor","string","",0,10000,False,False,False),
         "Modbus_Version":GEType("sensor","","",1,10,False,True,False),
         "Meter_Type":GEType("sensor","string","","","",False,False,False),
+        "Export_Limit":GEType("sensor","","",0,22000,False,False,False),
         "Invertor_Type":GEType("sensor","string","","","",False,False,False),
         "Invertor_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
         "Discharge_start_time_slot_1":GEType("select","","setDischargeStart1","","",False,False,False),
@@ -294,11 +329,17 @@ class GivLUT:
         "Battery_Firmware_Version":GEType("sensor","string","",500,5000,False,False,False),
         "Battery_Cells":GEType("sensor","","",0,24,False,True,False),
         "Battery_Cycles":GEType("sensor","","",0,5000,False,True,False),
-        "Battery_USB_present":GEType("binary_sensor","","",0,2,True,False,False),
+        "Battery_USB_present":GEType("binary_sensor","","",0,8,True,False,False),
         "Battery_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+<<<<<<< HEAD
         "Battery_Voltage":GEType("sensor","voltage","",0,100,False,True,False),
         "BMS_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
         "BMS_Voltage":GEType("sensor","voltage","",0,100,False,True,False),
+=======
+        "Battery_Voltage":GEType("sensor","voltage","",0,350,False,True,False),
+        "BMS_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "BMS_Voltage":GEType("sensor","voltage","",0,400,False,True,False),
+>>>>>>> origin/dev3
         "Battery_Cell_1_Voltage":GEType("sensor","voltage","",0,maxCellVoltage,False,True,False),
         "Battery_Cell_2_Voltage":GEType("sensor","voltage","",0,maxCellVoltage,False,True,False),
         "Battery_Cell_3_Voltage":GEType("sensor","voltage","",0,maxCellVoltage,False,True,False),
@@ -315,10 +356,38 @@ class GivLUT:
         "Battery_Cell_14_Voltage":GEType("sensor","voltage","",0,maxCellVoltage,False,True,False),
         "Battery_Cell_15_Voltage":GEType("sensor","voltage","",0,maxCellVoltage,False,True,False),
         "Battery_Cell_16_Voltage":GEType("sensor","voltage","",0,maxCellVoltage,False,True,False),
+        "Battery_Cell_17_Voltage":GEType("sensor","voltage","",0,maxCellVoltage,False,True,False),
+        "Battery_Cell_18_Voltage":GEType("sensor","voltage","",0,maxCellVoltage,False,True,False),
+        "Battery_Cell_19_Voltage":GEType("sensor","voltage","",0,maxCellVoltage,False,True,False),
+        "Battery_Cell_20_Voltage":GEType("sensor","voltage","",0,maxCellVoltage,False,True,False),
+        "Battery_Cell_21_Voltage":GEType("sensor","voltage","",0,maxCellVoltage,False,True,False),
+        "Battery_Cell_22_Voltage":GEType("sensor","voltage","",0,maxCellVoltage,False,True,False),
+        "Battery_Cell_23_Voltage":GEType("sensor","voltage","",0,maxCellVoltage,False,True,False),
+        "Battery_Cell_24_Voltage":GEType("sensor","voltage","",0,maxCellVoltage,False,True,False),
         "Battery_Cell_1_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
         "Battery_Cell_2_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
         "Battery_Cell_3_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
         "Battery_Cell_4_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_5_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_6_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_7_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_8_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_9_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_10_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_11_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_12_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_13_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_14_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_15_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_16_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_17_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_18_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_19_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_20_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_21_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_22_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_23_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
+        "Battery_Cell_24_Temperature":GEType("sensor","temperature","",-maxTemp,maxTemp,True,True,False),
         "Mode":GEType("select","","setBatteryMode","","",False,False,False),
         "Battery_Power_Reserve":GEType("number","","setBatteryReserve",4,100,False,False,False),
         "Battery_Power_Cutoff":GEType("number","","setBatteryCutoff",4,100,False,False,False),
@@ -350,14 +419,19 @@ class GivLUT:
         "Battery_Discharge_Rate":GEType("number","","setDischargeRate",0,10000,True,False,False),
         "Battery_Charge_Rate_AC":GEType("number","","setChargeRateAC",0,100,True,False,False),
         "Battery_Discharge_Rate_AC":GEType("number","","setDischargeRateAC",0,100,True,False,False),
+<<<<<<< HEAD
         "Night_Start_Energy_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,False,False),
         "Night_Energy_kWh":GEType("sensor","energy","",0,maxTodayEnergy,False,False,False),
+=======
+        "Night_Start_Energy_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,True,False),
+        "Night_Energy_kWh":GEType("sensor","energy","",0,maxTodayEnergy,False,True,False),
+>>>>>>> origin/dev3
         "Night_Cost":GEType("sensor","money","",0,maxCost,True,False,False),
         "Night_Rate":GEType("sensor","money","",0,maxRate,True,False,False),
-        "Day_Start_Energy_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,False,False),
-        "Day_Energy_kWh":GEType("sensor","energy","",0,maxTodayEnergy,False,False,False),
-        "Night_Energy_Total_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,False,False),
-        "Day_Energy_Total_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,False,False),
+        "Day_Start_Energy_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,True,False),
+        "Day_Energy_kWh":GEType("sensor","energy","",0,maxTodayEnergy,False,True,False),
+        "Night_Energy_Total_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,True,False),
+        "Day_Energy_Total_kWh":GEType("sensor","energy","",0,maxTodayEnergy,False,True,False),
         "Day_Cost":GEType("sensor","money","",0,maxCost,True,False,False),
         "Day_Rate":GEType("sensor","money","",0,maxRate,True,False,False),
         "Current_Rate":GEType("sensor","money","",0,maxRate,True,False,False),
@@ -376,8 +450,8 @@ class GivLUT:
         "Force_Export_Num":GEType("number","","forceExport",0,250,True,False,False),
         "Reboot_Invertor":GEType("switch","","rebootInverter","","",False,False,False),
         "Reboot_Addon":GEType("switch","","rebootAddon","","",False,False,False),
-        "Discharge_Time_Remaining":GEType("sensor","","",0,1000,True,False,False),
-        "Charge_Time_Remaining":GEType("sensor","","",0,1000,True,False,False),
+        "Discharge_Time_Remaining":GEType("sensor","","",0,20000,True,False,False),
+        "Charge_Time_Remaining":GEType("sensor","","",0,20000,True,False,False),
         "Charge_Completion_Time":GEType("sensor","timestamp","","","",False,False,False),
         "Discharge_Completion_Time":GEType("sensor","timestamp","","","",False,False,False),
         "Battery_Power_Mode":GEType("switch","","setBatteryPowerMode","","",False,False,False),
@@ -386,6 +460,167 @@ class GivLUT:
         "PV_input_mode":GEType("select","","setPVInputMode","","",True,False,False),
         "Grid_Frequency":GEType("sensor","frequency","",0,60,True,False,False),
         "Inverter_Output_Frequency":GEType("sensor","frequency","",0,60,True,False,False),
+<<<<<<< HEAD
+=======
+        "HV_Battery_Power":GEType("sensor","power","",0,maxBatPower,False,False,False),
+        "HV_Battery_Current":GEType("sensor","current","",0,1000,False,False,False),
+        "HV_Battery_Voltage":GEType("sensor","voltage","",0,350,False,False,False),
+        "HV_Battery_SOH":GEType("sensor","","",0,350,False,False,False),
+        "HV_Battery_Load_Voltage":GEType("sensor","voltage","",0,350,False,False,False),
+        "HV_Battery_Cycles":GEType("sensor","","",0,350,False,False,False),
+        "HV_Battery_SOC_Difference":GEType("sensor","","",0,100,False,False,False),
+        "HV_Battery_SOC_High":GEType("sensor","","",0,100,False,False,False),
+        "HV_Battery_SOC_Low":GEType("sensor","","",0,100,False,False,False),
+        "Battery_Calibration":GEType("select","","setBatteryCalibration","","",True,False,False),
+
+### EMS ###
+        "Inverter_Count":GEType("sensor","","",0,4,False,False,False),
+        "Meter_Count":GEType("sensor","","",0,8,False,False,False),
+        "EMS_Status":GEType("sensor","","","","",False,False,False),
+        "Remaining_Battery_Wh":GEType("sensor","","",0,1000000,False,False,False),
+        "Power":GEType("sensor","power","",0,maxPower,False,False,False),
+        "Temperature":GEType("sensor","temperature","",0,maxTemp,False,False,False),
+        "Calculated_Load_Power":GEType("sensor","power","",0,maxPower,False,False,False),
+        "Measured_Load_Power":GEType("sensor","power","",0,maxPower,False,False,False),
+        "Generation_Load_Power":GEType("sensor","power","",0,maxPower,False,False,False),
+        "Total_Power":GEType("sensor","power","",-maxPower,maxPower,False,False,False),
+        "Total_Battery_Power":GEType("sensor","power","",-maxPower,maxPower,False,False,False),
+        "Other_Battery_Power":GEType("sensor","power","",-maxPower,maxPower,False,False,False),
+        "Generation_Energy_Total_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,False,True),
+        "Inverter_Out_Energy_Total_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,False,True),
+        "Inverter_In_Energy_Total_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,False,True),
+        "Export_Energy_Today_kWh":GEType("sensor","energy","",0,maxTodayEnergy,False,False,False),
+        "Inverter_In_Energy_Today_kWh":GEType("sensor","energy","",0,maxTodayEnergy,False,False,False),
+        "Inverter_Out_Energy_Today_kWh":GEType("sensor","energy","",0,maxTodayEnergy,False,False,False),
+        "Generation_Energy_Today_kWh":GEType("sensor","energy","",0,maxTodayEnergy,False,False,False),
+        "Parallel_Total_Charge_Energy_Today_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,False,False),
+        "Parallel_Total_Charge_Energy_Total_kWh":GEType("sensor","energy","",0,maxTodayEnergy,False,False,True),
+        "Parallel_Total_Discharge_Energy_Today_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,False,False),
+        "Parallel_Total_Discharge_Energy_Total_kWh":GEType("sensor","energy","",0,maxTodayEnergy,False,False,True),
+        "EMS_Charge_Target_SOC_1":GEType("number","","setEMSChargeTarget1",4,100,False,False,False),
+        "EMS_Charge_Target_SOC_2":GEType("number","","setEMSChargeTarget2",4,100,False,False,False),
+        "EMS_Charge_Target_SOC_3":GEType("number","","setEMSChargeTarget3",4,100,False,False,False),
+        "EMS_Discharge_Target_SOC_1":GEType("number","","setEMSDischargeTarget",4,100,False,False,False),
+        "EMS_Discharge_Target_SOC_2":GEType("number","","setEMSDischargeTarget2",4,100,False,False,False),
+        "EMS_Discharge_Target_SOC_3":GEType("number","","setEMSDischargeTarget3",4,100,False,False,False),
+        "EMS_Charge_start_time_slot_1":GEType("select","","setEMSChargeStart1","","",False,False,False),
+        "EMS_Charge_end_time_slot_1":GEType("select","","setEMSChargeEnd1","","",False,False,False),
+        "EMS_Charge_start_time_slot_2":GEType("select","","setEMSChargeStart2","","",False,False,False),
+        "EMS_Charge_end_time_slot_2":GEType("select","","setEMSChargeEnd2","","",False,False,False),
+        "EMS_Charge_start_time_slot_3":GEType("select","","setEMSChargeStart3","","",False,False,False),
+        "EMS_Charge_end_time_slot_3":GEType("select","","setEMSChargeEnd3","","",False,False,False),
+        "EMS_Discharge_start_time_slot_1":GEType("select","","setEMSDischargeStart1","","",False,False,False),
+        "EMS_Discharge_end_time_slot_1":GEType("select","","setEMSDischargeEnd1","","",False,False,False),
+        "EMS_Discharge_start_time_slot_2":GEType("select","","setEMSDischargeStart2","","",False,False,False),
+        "EMS_Discharge_end_time_slot_2":GEType("select","","setEMSDischargeEnd2","","",False,False,False),
+        "EMS_Discharge_start_time_slot_3":GEType("select","","setEMSDischargeStart3","","",False,False,False),
+        "EMS_Discharge_end_time_slot_3":GEType("select","","setEMSDischargeEnd3","","",False,False,False),
+        
+        "Meter_1_Power":GEType("sensor","power","",-maxPower,maxPower,False,False,False),
+        "Meter_2_Power":GEType("sensor","power","",-maxPower,maxPower,False,False,False),
+        "Meter_3_Power":GEType("sensor","power","",-maxPower,maxPower,False,False,False),
+        "Meter_4_Power":GEType("sensor","power","",-maxPower,maxPower,False,False,False),
+        "Meter_5_Power":GEType("sensor","power","",-maxPower,maxPower,False,False,False),
+        "Meter_6_Power":GEType("sensor","power","",-maxPower,maxPower,False,False,False),
+        "Meter_7_Power":GEType("sensor","power","",-maxPower,maxPower,False,False,False),
+        "Meter_8_Power":GEType("sensor","power","",-maxPower,maxPower,False,False,False),
+        "Meter_1_Status":GEType("sensor","","","","",False,False,False),
+        "Meter_2_Status":GEType("sensor","","","","",False,False,False),
+        "Meter_3_Status":GEType("sensor","","","","",False,False,False),
+        "Meter_4_Status":GEType("sensor","","","","",False,False,False),
+        "Meter_5_Status":GEType("sensor","","","","",False,False,False),
+        "Meter_6_Status":GEType("sensor","","","","",False,False,False),
+        "Meter_7_Status":GEType("sensor","","","","",False,False,False),
+        "Meter_8_Status":GEType("sensor","","","","",False,False,False),
+        "Plant_Control":GEType("switch","","","","",False,False,False),
+        "Plant_Status":GEType("sensor","string","","","",False,False,False),
+        "Car_Charge_Mode":GEType("select","","","","",False,False,False),
+        "Car_Charge_Boost":GEType("number","","setCarChargeBoost",0,65536,False,False,False),
+        "Car_Charge_Count":GEType("number","","",0,10,False,False,False),
+        "Plant_Charge_Compensation":GEType("number","","",-5,5,False,False,False),
+        "Plant_Discharge_Compensation":GEType("number","","",-5,5,False,False,False),
+        "Export_Target_SOC_1":GEType("number","","setExportTarget1",0,100,False,False,False),
+        "Export_Target_SOC_2":GEType("number","","setExportTarget2",0,100,False,False,False),
+        "Export_Target_SOC_3":GEType("number","","setExportTarget3",0,100,False,False,False),
+        "Export_Power_Limit":GEType("number","","setExportLimit",0,65536,False,False,False),
+        "Export_start_time_slot_1":GEType("select","","setExportStart1","","",False,False,False),
+        "Export_end_time_slot_1":GEType("select","","setExportEnd1","","",False,False,False),
+        "Export_start_time_slot_2":GEType("select","","setExportStart2","","",False,False,False),
+        "Export_end_time_slot_2":GEType("select","","setExportEnd2","","",False,False,False),
+        "Export_start_time_slot_3":GEType("select","","setExportStart3","","",False,False,False),
+        "Export_end_time_slot_3":GEType("select","","setExportEnd3","","",False,False,False),
+
+### ThreePhase ###
+        "Export2_Energy_Today_kWh":GEType("sensor","energy","",0,maxTodayEnergy,False,False,False),
+        "PV1_Energy_Today_kWh":GEType("sensor","energy","",0,maxTodayEnergy,False,False,False),
+        "PV_Energy_Today_kWh":GEType("sensor","energy","",0,maxTodayEnergy,False,False,False),
+        "PV1_Energy_Total_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,False,True),
+        "PV2_Energy_Total_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,False,True),
+        "Export2_Energy_Total_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,False,True),
+        "Meter2_Power":GEType("sensor","power","",-maxPower,maxPower,False,False,False),
+        "EPS_Phase1_Power":GEType("sensor","power","",0,maxPower,False,False,False),
+        "EPS_Phase2_Power":GEType("sensor","power","",0,maxPower,False,False,False),
+        "EPS_Phase3_Power":GEType("sensor","power","",0,maxPower,False,False,False),
+        "Battery_Charge_Power":GEType("sensor","power","",0,maxPower,False,False,False),
+        "Battery_Discharge_Power":GEType("sensor","power","",0,maxPower,False,False,False),
+        "Grid_Apparent_Power":GEType("sensor","power","",0,maxPower,False,False,False),
+        "Inverter_Power_Out":GEType("sensor","power","",0,maxPower,False,False,False),
+        "Meter_Import_Power":GEType("sensor","power","",0,maxPower,False,False,False),
+        "Meter_Export_Power":GEType("sensor","power","",0,maxExport,False,False,False),
+        "Load_Phase1_Power":GEType("sensor","power","",0,maxPower,False,False,False),
+        "Load_Phase2_Power":GEType("sensor","power","",0,maxPower,False,False,False),
+        "Load_Phase3_Power":GEType("sensor","power","",0,maxPower,False,False,False),
+        "Export_Phase1_Power":GEType("sensor","power","",0,maxExport,False,False,False),
+        "Export_Phase2_Power":GEType("sensor","power","",0,maxExport,False,False,False),
+        "Export_Phase3_Power":GEType("sensor","power","",0,maxExport,False,False,False),
+        "Grid_Phase1_Voltage":GEType("sensor","voltage","",0,415,False,False,False),
+        "Grid_Phase2_Voltage":GEType("sensor","voltage","",0,415,False,False,False),
+        "Grid_Phase3_Voltage":GEType("sensor","voltage","",0,415,False,False,False),
+        "Grid_Phase1_Current":GEType("sensor","current","",-120,120,False,False,False),
+        "Grid_Phase2_Current":GEType("sensor","current","",-120,120,False,False,False),
+        "Grid_Phase3_Current":GEType("sensor","current","",-120,120,False,False,False),
+        "PV_Current":GEType("sensor","current","",0,200,True,False,False),
+        "PCS_Voltage":GEType("sensor","voltage","",0,415,False,False,False),
+        "EPS_Nominal_Frequency":GEType("sensor","frequency","",0,60,False,False,False),
+        "System_Mode":GEType("sensor","","","","",False,False,False),
+        "Power_Factor":GEType("sensor","","","","",False,False,False),
+        "Start_Delay_Time":GEType("sensor","","",0,100,False,False,False),
+        "Battery_Priority":GEType("sensor","","","","",False,False,False),
+        "Boost_Temperature":GEType("sensor","temperature","",0,100,False,False,False),
+        "Inverter_Temperature":GEType("sensor","temperature","",0,100,False,False,False),
+        "Buck_Boost_Temperature":GEType("sensor","temperature","",0,100,False,False,False),
+        "DC_Status":GEType("sensor","","","","",False,False,False),
+        "Inverter_Time":GEType("sensor","timestamp","","","",False,False,False),
+        "Force_Discharge_Enable":GEType("switch","","","","",False,False,False),
+        "Force_Charge_Enable":GEType("switch","","","","",False,False,False),
+        "Force_AC_Charge_Enable":GEType("switch","","","","",False,False,False),
+        "Max_Charge_Current":GEType("number","","",0,64,False,False,False),
+        "Load_Target_SOC":GEType("number","","",0,100,False,False,False),
+        "Export_Limit_AC":GEType("number","","",0,maxInvPower,False,False,False),
+        "Reactive_Power_Rate":GEType("number","","",0,maxInvPower,False,False,False),
+        "Discharge_Target_SOC":GEType("number","","",0,100,False,False,False),
+
+### Gateway ###
+        "Gateway_Software_Version":GEType("sensor","string","","","",False,False,False),
+        "Liberty_Power":GEType("sensor","power","",-maxPower,maxPower,False,False,False),
+        "Grid_Relay_Voltage":GEType("sensor","voltage","",0,300,False,False,False),
+        "Inverter_Relay_Voltage":GEType("sensor","voltage","",0,300,False,False,False),
+        "Load_Voltage":GEType("sensor","voltage","",0,300,False,False,False),
+        "Load_Current":GEType("sensor","current","",0,300,False,False,False),
+        "Inverter_Current":GEType("sensor","current","",0,300,False,False,False),
+        "Gateway_Inverter_Power":GEType("sensor","power","",-maxPower,maxPower,False,False,False),
+        "Total_Gateway_Power":GEType("sensor","power","",-maxPower,maxPower,False,False,False),
+        "Parallel_Total_AIO_Number":GEType("sensor","string","",0,4,False,False,False),
+        "Parallel_Total_AIO_Online_Number":GEType("sensor","string","",0,4,False,False,False),
+        "Gateway_State":GEType("sensor","string","",0,3,False,False,False),
+        "DO_State":GEType("sensor","string","",0,2,False,False,False),
+        "DI_State":GEType("sensor","string","","","",False,False,False),
+        "AC_Discharge_Energy_Today_kWh":GEType("sensor","energy","",0,maxTodayEnergy,False,False,False),
+        "AC_Charge_Energy_Today_kWh":GEType("sensor","energy","",0,maxTodayEnergy,False,False,False),
+        "AC_Discharge_Energy_Total_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,False,True),
+        "AC_Charge_Energy_Total_kWh":GEType("sensor","energy","",0,maxTotalEnergy,False,False,True),
+
+>>>>>>> origin/dev3
 ### EVC ###
         "Charging_State":GEType("sensor","string","","","",False,False,False),
         "Connection_Status":GEType("sensor","string","","","",False,False,False),
@@ -393,6 +628,7 @@ class GivLUT:
         "Serial_Number":GEType("sensor","string","","","",False,False,False),
         "Plug_and_Go":GEType("switch","","chargeMode","","",False,False,False),
         "Charge_Control":GEType("select","","controlCharge","","",False,False,False),
+<<<<<<< HEAD
         "Current_L1":GEType("sensor","current","","","",False,False,False),
         "Current_L2":GEType("sensor","current","","","",False,False,False),
         "Current_L3":GEType("sensor","current","","","",False,False,False),
@@ -403,6 +639,18 @@ class GivLUT:
         "Active_Power_L1":GEType("sensor","power","","","",False,False,False),
         "Active_Power_L2":GEType("sensor","power","","","",False,False,False),
         "Active_Power_L3":GEType("sensor","power","","","",False,False,False),
+=======
+        "Current_L1":GEType("sensor","current","",0,64,False,False,False),
+        "Current_L2":GEType("sensor","current","",0,64,False,False,False),
+        "Current_L3":GEType("sensor","current","",0,64,False,False,False),
+        "Evse_Max_Current":GEType("sensor","current","",6,32,False,False,False),
+        "Evse_Min_Current":GEType("sensor","current","",6,32,False,False,False),
+        "Charge_Limit":GEType("number","","setCurrentLimit","","",False,False,False),
+        "Active_Power":GEType("sensor","power","",0,22000,False,False,False),
+        "Active_Power_L1":GEType("sensor","power","",0,22000,False,False,False),
+        "Active_Power_L2":GEType("sensor","power","",0,22000,False,False,False),
+        "Active_Power_L3":GEType("sensor","power","",0,22000,False,False,False),
+>>>>>>> origin/dev3
         "Meter_Energy":GEType("sensor","energy","","","",False,False,False),
         "Charge_Session_Energy":GEType("sensor","energy","","","",False,False,False),
         "Charge_Session_Duration":GEType("sensor","string","","","",False,False,False),
@@ -447,10 +695,15 @@ class GivLUT:
     modes=["Eco","Eco (Paused)","Timed Demand","Timed Export","Unknown"]
     rates=["Day","Night"]
     battery_pause_mode=["Disabled","PauseCharge","PauseDischarge","PauseBoth",]
+    car_charge_mode=["Stop","Eco","Eco+","Fast"]
     local_control_mode=["Load","Battery","Grid"]
     pv_input_mode=["Independent","1x2"]
     charge_control=['Ready','Start','Stop']
     charging_mode=['Grid','Hybrid','Solar']
+<<<<<<< HEAD
+=======
+    battery_calibration=['Off','Start','','Charge Only']
+>>>>>>> origin/dev3
 
     def getTime(timestamp):
         timeslot=timestamp.strftime("%H:%M")

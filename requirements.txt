@@ -15,5 +15,9 @@ pymodbus
 async_timeout
 vite
 tzdata
+<<<<<<< HEAD
 arrow
 #git+https://github.com/jace/rq-dashboard.git
+=======
+arrow
+>>>>>>> origin/dev3

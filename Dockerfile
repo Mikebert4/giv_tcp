@@ -21,10 +21,32 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY givtcp-vuejs/package.json ./config_frontend/package.json
+<<<<<<< HEAD
 
 #RUN cd /app/config_frontend && npm install
 #COPY givtcp-vuejs ./config_frontend
 #RUN cd /app/config_frontend && npm run build
+=======
+
+RUN cd /app/config_frontend && npm install
+COPY givtcp-vuejs ./config_frontend
+RUN cd /app/config_frontend && npm run build
+
+COPY ingress.conf /etc/nginx/http.d/
+RUN rm /etc/nginx/http.d/default.conf
+
+# copy the content of the local src directory to the working directory
+COPY GivTCP/ ./GivTCP
+COPY WebDashboard ./WebDashboard
+COPY givenergy_modbus/ /usr/local/lib/python3.11/site-packages/givenergy_modbus
+COPY GivTCP/givenergy_modbus_async/ /usr/local/lib/python3.11/site-packages/givenergy_modbus_async
+
+COPY startup.py startup.py
+COPY startup_3.py startup_3.py
+COPY redis.conf redis.conf
+COPY settings.json /app/settings.json
+COPY index.html /app/index.html
+>>>>>>> origin/dev3
 
 COPY ingress.conf /etc/nginx/http.d/
 RUN rm /etc/nginx/http.d/default.conf
@@ -56,6 +78,11 @@ ENV INVERTOR_NAME_3="Inv3"
 ENV NUMBATTERIES_3=1
 ENV INVERTOR_AIO_3=False
 ENV INVERTOR_AC_3=True
+ENV INVERTOR_IP_4=""
+ENV INVERTOR_NAME_4="Inv4"
+ENV NUMBATTERIES_4=1
+ENV INVERTOR_AIO_4=False
+ENV INVERTOR_AC_4=True
 ENV MQTT_OUTPUT=True
 ENV MQTT_ADDRESS=""
 ENV MQTT_USERNAME=""
@@ -69,6 +96,10 @@ ENV LOG_LEVEL="Info"
 ENV PRINT_RAW=True
 ENV SELF_RUN=True
 ENV SELF_RUN_LOOP_TIMER=30
+<<<<<<< HEAD
+=======
+ENV SELF_RUN_LOOP_TIMER_FULL=120
+>>>>>>> origin/dev3
 ENV INFLUX_OUTPUT=False
 ENV INFLUX_URL=""
 ENV INFLUX_TOKEN=""
@@ -78,6 +109,7 @@ ENV HA_AUTO_D=True
 ENV HADEVICEPREFIX="GivTCP"
 ENV HADEVICEPREFIX_2="GivTCP2"
 ENV HADEVICEPREFIX_3="GivTCP3"
+ENV HADEVICEPREFIX_4="GivTCP4"
 ENV PYTHONPATH="/app"
 ENV DAYRATE=0.395
 ENV NIGHTRATE=0.155

@@ -2,8 +2,11 @@
     "NUMINVERTORS": 1,
     "invertorIP": "",
     "numBatteries": 1,
+<<<<<<< HEAD
     "isAIO": false,
     "isAC": false,
+=======
+>>>>>>> origin/dev3
     "MQTT_Output": true,
     "MQTT_Address": "",
     "MQTT_Username": "",
@@ -17,7 +20,12 @@
     "Log_Level": "Info",
     "Print_Raw_Registers": true,
     "self_run": true,
+<<<<<<< HEAD
     "self_run_timer": 15,
+=======
+    "self_run_timer": 30,
+    "self_run_timer_full": 120,
+>>>>>>> origin/dev3
     "queue_retries": 2,
     "data_smoother": "medium",
     "Influx_Output": false,

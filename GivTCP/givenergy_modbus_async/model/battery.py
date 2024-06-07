@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from enum import IntEnum
 
 from pydantic import BaseConfig, create_model
@@ -10,10 +11,27 @@ from givenergy_modbus_async.model.register import (
     RegisterDefinition as Def,
 )
 from givenergy_modbus_async.model.register import (
+=======
+"""
+High level interpretation of the battery modbus registers.
+
+The Battery itself is the primary class; the others are
+supporting enumerations.
+"""
+
+from .register import *
+
+from .register import (
+    Converter as DT,
+    DynamicDoc,
+    RegisterDefinition as Def,
+    IR,
+>>>>>>> origin/dev3
     RegisterGetter,
 )
 
 
+<<<<<<< HEAD
 class UsbDevice(IntEnum):
     """USB devices that can be inserted into batteries."""
 
@@ -23,6 +41,14 @@ class UsbDevice(IntEnum):
 
 class BatteryRegisterGetter(RegisterGetter):
     """Structured format for all battery attributes."""
+=======
+class Battery(RegisterGetter, metaclass=DynamicDoc):
+    # pylint: disable=missing-class-docstring
+    # The metaclass turns accesses to __doc__ into calls to
+    # _gendoc()  (which we inherit from RegisterGetter)
+
+    _DOC = """Battery presents all battery attributes as python types."""
+>>>>>>> origin/dev3
 
     REGISTER_LUT = {
         # Input Registers, block 60-119
@@ -70,8 +96,14 @@ class BatteryRegisterGetter(RegisterGetter):
         "cap_design2": Def(DT.uint32, DT.centi, IR(101), IR(102)),
         "t_max": Def(DT.deci, None, IR(103)),
         "t_min": Def(DT.deci, None, IR(104)),
+<<<<<<< HEAD
         # IR(105-109) unused
 
+=======
+        # IR(107-109) unused
+        "e_battery_discharge_total": Def(DT.deci, None, IR(105)),
+        "e_battery_charge_total": Def(DT.deci, None, IR(106)),
+>>>>>>> origin/dev3
         "serial_number": Def(
             DT.string, None, IR(110), IR(111), IR(112), IR(113), IR(114)
         ),
@@ -79,6 +111,7 @@ class BatteryRegisterGetter(RegisterGetter):
         # IR(116-119) unused
     }
 
+<<<<<<< HEAD
 
 class BatteryConfig(BaseConfig):
     """Pydantic configuration for the Battery class."""
@@ -98,6 +131,11 @@ class Battery(_Battery):  # type: ignore[misc,valid-type]
     def is_valid(self) -> bool:
         """Try to detect if a battery exists based on its attributes."""
         return self.serial_number not in (
+=======
+    def is_valid(self) -> bool:
+        """Try to detect if a battery exists based on its attributes."""
+        return self.get('serial_number') not in (
+>>>>>>> origin/dev3
             None,
             "",
             "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",

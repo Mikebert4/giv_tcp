@@ -1,6 +1,7 @@
 import logging
 from abc import ABC
 
+<<<<<<< HEAD
 from givenergy_modbus_async.codec import (
     PayloadDecoder,
     PayloadEncoder,
@@ -9,6 +10,16 @@ from givenergy_modbus_async.exceptions import (
     InvalidPduState,
 )
 from givenergy_modbus_async.pdu.transparent import (
+=======
+from ..codec import (
+    PayloadDecoder,
+    PayloadEncoder,
+)
+from ..exceptions import (
+    InvalidPduState,
+)
+from .transparent import (
+>>>>>>> origin/dev3
     TransparentMessage,
     TransparentRequest,
     TransparentResponse,

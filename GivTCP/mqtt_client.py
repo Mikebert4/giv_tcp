@@ -81,6 +81,15 @@ def on_message(client, userdata, message):
         elif command=="setPVInputMode":
             writecommand['state']=str(message.payload.decode("utf-8"))
             wr.setPVInputMode(writecommand)
+        elif command=="setCarChargeBoost":
+            writecommand['state']=str(message.payload.decode("utf-8"))
+            wr.setCarChargeBoost(writecommand)
+        elif command=="setBatteryCalibration":
+            writecommand['state']=str(message.payload.decode("utf-8"))
+            wr.setBatteryCalibration(writecommand)
+        elif command=="setExportLimit":
+            writecommand['state']=str(message.payload.decode("utf-8"))
+            wr.setExportLimit(writecommand)
         elif command=="enableDischarge":
             writecommand['state']=str(message.payload.decode("utf-8"))
             wr.enableDischarge(writecommand)
@@ -222,6 +231,38 @@ def on_message(client, userdata, message):
             payload['finish']=message.payload.decode("utf-8")[:5]
             payload['slot']=10
             wr.setChargeSlotEnd(payload)
+
+        elif command=="setEMSChargeStart1":
+            payload['start']=message.payload.decode("utf-8")[:5]
+            payload['slot']=1
+            payload['EMS']=True
+            wr.setChargeSlotStart(payload)
+        elif command=="setEMSChargeEnd1":
+            payload['finish']=message.payload.decode("utf-8")[:5]
+            payload['slot']=1
+            payload['EMS']=True
+            wr.setChargeSlotEnd(payload)
+        elif command=="setEMSChargeStart2":
+            payload['start']=message.payload.decode("utf-8")[:5]
+            payload['slot']=2
+            payload['EMS']=True
+            wr.setChargeSlotStart(payload)
+        elif command=="setEMSChargeEnd2":
+            payload['finish']=message.payload.decode("utf-8")[:5]
+            payload['slot']=2
+            payload['EMS']=True
+            wr.setChargeSlotEnd(payload)
+        elif command=="setEMSChargeStart3":
+            payload['start']=message.payload.decode("utf-8")[:5]
+            payload['slot']=3
+            payload['EMS']=True
+            wr.setChargeSlotStart(payload)
+        elif command=="setEMSChargeEnd3":
+            payload['finish']=message.payload.decode("utf-8")[:5]
+            payload['slot']=3
+            payload['EMS']=True
+            wr.setChargeSlotEnd(payload)
+
         elif command=="setDischargeStart1":
             payload['start']=message.payload.decode("utf-8")[:5]
             payload['slot']=1
@@ -302,6 +343,74 @@ def on_message(client, userdata, message):
             payload['finish']=message.payload.decode("utf-8")[:5]
             payload['slot']=10
             wr.setDischargeSlotEnd(payload)
+<<<<<<< HEAD
+=======
+        elif command=="setEMSDischargeStart1":
+            payload['start']=message.payload.decode("utf-8")[:5]
+            payload['slot']=1
+            payload['EMS']=True
+            wr.setDischargeSlotStart(payload)
+        elif command=="setEMSDischargeEnd1":
+            payload['finish']=message.payload.decode("utf-8")[:5]
+            payload['slot']=1
+            payload['EMS']=True
+            wr.setDischargeSlotEnd(payload)
+        elif command=="setEMSDischargeStart2":
+            payload['start']=message.payload.decode("utf-8")[:5]
+            payload['slot']=2
+            payload['EMS']=True
+            wr.setDischargeSlotStart(payload)
+        elif command=="setEMSDischargeEnd2":
+            payload['finish']=message.payload.decode("utf-8")[:5]
+            payload['slot']=2
+            payload['EMS']=True
+            wr.setDischargeSlotEnd(payload)
+        elif command=="setEMSDischargeStart3":
+            payload['start']=message.payload.decode("utf-8")[:5]
+            payload['slot']=3
+            payload['EMS']=True
+            wr.setDischargeSlotStart(payload)
+        elif command=="setEMSDischargeEnd3":
+            payload['finish']=message.payload.decode("utf-8")[:5]
+            payload['slot']=3
+            payload['EMS']=True
+            wr.setDischargeSlotEnd(payload)
+        elif command=="setExportStart1":
+            payload['start']=message.payload.decode("utf-8")[:5]
+            payload['slot']=1
+            wr.setExportSlotStart(payload)
+        elif command=="setExportEnd1":
+            payload['finish']=message.payload.decode("utf-8")[:5]
+            payload['slot']=1
+            wr.setExportSlotEnd(payload)
+        elif command=="setExportStart2":
+            payload['start']=message.payload.decode("utf-8")[:5]
+            payload['slot']=2
+            wr.setExportSlotStart(payload)
+        elif command=="setExportEnd2":
+            payload['finish']=message.payload.decode("utf-8")[:5]
+            payload['slot']=2
+            wr.setExportSlotEnd(payload)
+        elif command=="setExportStart3":
+            payload['start']=message.payload.decode("utf-8")[:5]
+            payload['slot']=3
+            wr.setExportSlotStart(payload)
+        elif command=="setExportEnd3":
+            payload['finish']=message.payload.decode("utf-8")[:5]
+            payload['slot']=3
+            wr.setExportSlotEnd(payload)
+        elif command=="setExportTarget1":
+            writecommand['exportToPercent']=str(message.payload.decode("utf-8"))
+            writecommand['slot']=1
+            wr.setExportTarget(writecommand)
+        elif command=="setExportTarget2":
+            writecommand['exportToPercent']=str(message.payload.decode("utf-8"))
+            writecommand['slot']=2
+            wr.setExportTarget(writecommand)
+        elif command=="setExportTarget3":
+            writecommand['exportToPercent']=str(message.payload.decode("utf-8"))
+            writecommand['slot']=3
+>>>>>>> origin/dev3
         elif command=="setDischargeTarget1":
             writecommand['dischargeToPercent']=str(message.payload.decode("utf-8"))
             writecommand['slot']=1
@@ -313,7 +422,11 @@ def on_message(client, userdata, message):
         elif command=="setDischargeTarget3":
             writecommand['dischargeToPercent']=str(message.payload.decode("utf-8"))
             writecommand['slot']=3
+<<<<<<< HEAD
             wr.setDischargeTarget(writecommand)
+=======
+            wr.setExportTarget(writecommand)
+>>>>>>> origin/dev3
         elif command=="setDischargeTarget4":
             writecommand['dischargeToPercent']=str(message.payload.decode("utf-8"))
             writecommand['slot']=4
@@ -432,8 +545,14 @@ while not hasattr(GiV_Settings,'serial_number'):
     importlib.reload(settings)
     from settings import GiV_Settings
     count=count + 1      # 09-July-2023  previous +1 only simply reset value to 1 so loop was infinite
+<<<<<<< HEAD
     if count==20:
         break
+=======
+    if count==50:
+        logger.error("No serial_number found in MQTT queue. MQTT Control not available. Double check logs for connection errors and restart GivTCP or ensure correct AIO/firmware settings")
+        exit
+>>>>>>> origin/dev3
 if hasattr(GiV_Settings,'serial_number'):
     logger.debug("Serial Number retrieved: "+GiV_Settings.serial_number)
 
@@ -448,5 +567,8 @@ if hasattr(GiV_Settings,'serial_number'):
     logger.debug ("Connecting to broker(sub): "+ MQTT_Address)
     client.connect(MQTT_Address,port=MQTT_Port)
     client.loop_forever()
+<<<<<<< HEAD
 else:
     logger.error("No serial_number found in MQTT queue. MQTT Control not available. Double check logs for connection errors and restart GivTCP or ensure correct AIO/firmware settings")
+=======
+>>>>>>> origin/dev3
